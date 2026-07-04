@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elden Ring — Full Collectible Route</title>
+<style>
+:root {
+  --gold: #c9a84c;
+  --gold-dim: #7a6030;
+  --gold-glow: rgba(201,168,76,0.12);
+  --bg: #0d0c0a;
+  --surface: #141210;
+  --surface2: #1c1a16;
+  --border: #2a2620;
+  --text: #d4cfc4;
+  --text-dim: #6a6460;
+  --text-bright: #ede8dc;
+  --miss: #c44040;
+  --miss-bg: #1a0000;
+  --warn: #c4902a;
+  --warn-bg: #1a1200;
+  --green: #4a9e5c;
+  --green-bg: #001a08;
+  --blue: #5a8fc4;
+  --blue-bg: #001020;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: Georgia, serif; font-size: 14px; line-height: 1.5; }
+
+/* HEADER */
+header {
+  background: linear-gradient(180deg,#1a1610 0%,var(--bg) 100%);
+  border-bottom: 1px solid var(--gold-dim);
+  padding: 18px 24px 14px;
+  display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap;
+  position: sticky; top: 0; z-index: 100;
+}
+header h1 { font-size: 20px; color: var(--gold); letter-spacing:.15em; text-transform:uppercase; font-weight:normal; text-shadow:0 0 20px rgba(201,168,76,.4); }
+header p { color:var(--text-dim); font-size:11px; letter-spacing:.08em; text-transform:uppercase; margin-top:2px; }
+.hdr-stats { display:flex; gap:16px; margin-left:auto; flex-wrap:wrap; }
+.hdr-stat { text-align:center; }
+.hdr-stat .n { font-size:18px; color:var(--gold); font-weight:bold; display:block; line-height:1; }
+.hdr-stat .l { font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.07em; display:block; margin-top:2px; }
+.hdr-right { display:flex; gap:8px; align-items:center; }
+.btn { padding:5px 11px; border:1px solid var(--border); background:var(--surface); color:var(--text-dim); cursor:pointer; font-size:11px; letter-spacing:.06em; text-transform:uppercase; border-radius:2px; font-family:inherit; transition:all .1s; }
+.btn:hover { border-color:var(--gold-dim); color:var(--gold); }
+.btn.danger:hover { border-color:var(--miss); color:var(--miss); }
+
+/* LAYOUT */
+.layout { display:flex; min-height:calc(100vh - 90px); }
+
+/* SIDEBAR NAV */
+.sidenav {
+  width:200px; min-width:200px; background:var(--surface); border-right:1px solid var(--border);
+  position:sticky; top:90px; height:calc(100vh - 90px); overflow-y:auto; padding:12px 0;
+}
+.sidenav::-webkit-scrollbar { width:4px; }
+.sidenav::-webkit-scrollbar-thumb { background:var(--border); }
+.sn-label { padding:8px 14px 3px; font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.1em; }
+.sn-item {
+  padding:6px 14px; cursor:pointer; font-size:12px; color:var(--text-dim);
+  border-left:2px solid transparent; transition:all .1s; display:flex; justify-content:space-between; align-items:center;
+}
+.sn-item:hover { background:var(--surface2); color:var(--text); }
+.sn-item.active { color:var(--gold); border-left-color:var(--gold); background:var(--gold-glow); }
+.sn-badge { font-size:10px; background:var(--surface2); color:var(--text-dim); padding:1px 5px; border-radius:8px; }
+.sn-item.active .sn-badge { background:var(--gold-glow); color:var(--gold); }
+.sn-sep { border:none; border-top:1px solid var(--border); margin:8px 0; }
+
+/* MAIN CONTENT */
+.main { flex:1; padding:0; overflow-y:auto; }
+
+/* AREA BLOCKS */
+.area-block {
+  border-bottom: 1px solid var(--border);
+  scroll-margin-top: 90px;
+}
+.area-header {
+  padding: 16px 24px 12px;
+  background: var(--surface);
+  cursor: pointer;
+  display: flex; align-items: center; gap: 14px;
+  user-select: none;
+  transition: background .1s;
+}
+.area-header:hover { background: var(--surface2); }
+.area-num {
+  background: var(--gold-dim); color: var(--bg);
+  width:26px; height:26px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:bold; flex-shrink:0;
+}
+.area-title { font-size:16px; color:var(--text-bright); letter-spacing:.05em; font-weight:normal; }
+.area-subtitle { font-size:11px; color:var(--text-dim); margin-top:2px; }
+.area-progress { margin-left:auto; display:flex; align-items:center; gap:10px; }
+.area-prog-text { font-size:11px; color:var(--text-dim); white-space:nowrap; }
+.area-prog-bar { width:80px; height:4px; background:var(--border); border-radius:2px; }
+.area-prog-fill { height:4px; background:linear-gradient(90deg,var(--gold-dim),var(--gold)); border-radius:2px; transition:width .3s; }
+.expand-icon { color:var(--text-dim); font-size:14px; margin-left:8px; transition:transform .2s; }
+.area-header.open .expand-icon { transform:rotate(180deg); }
+
+.area-body { display:none; padding:16px 24px 20px; }
+.area-body.open { display:block; }
+
+/* STORY NOTES */
+.story-note {
+  background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--gold);
+  padding:10px 14px; margin-bottom:14px; border-radius:2px; font-size:13px;
+}
+.story-note strong { color:var(--gold); }
+
+.miss-note {
+  background:var(--miss-bg); border:1px solid #3a0000; border-left:3px solid var(--miss);
+  padding:9px 14px; margin-bottom:12px; border-radius:2px; font-size:12px; color:#d07070;
+}
+.miss-note strong { color:var(--miss); }
+
+.warn-note {
+  background:var(--warn-bg); border:1px solid #3a2000; border-left:3px solid var(--warn);
+  padding:9px 14px; margin-bottom:12px; border-radius:2px; font-size:12px; color:#d0a060;
+}
+.warn-note strong { color:var(--warn); }
+
+/* CHECKLIST */
+.cat-section { margin-bottom:14px; }
+.cat-label {
+  font-size:10px; color:var(--gold-dim); text-transform:uppercase; letter-spacing:.12em;
+  padding:6px 0 4px; border-bottom:1px solid var(--border); margin-bottom:4px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.cat-label-count { font-size:10px; color:var(--text-dim); }
+
+.check-item {
+  display:flex; align-items:flex-start; gap:9px; padding:5px 8px; border-radius:2px;
+  cursor:pointer; transition:background .1s; border:1px solid transparent;
+  border-left:2px solid transparent; user-select:none;
+}
+.check-item:hover { background:var(--surface2); }
+.check-item.done { opacity:.4; }
+.check-item.done .item-text { text-decoration:line-through; color:var(--text-dim); }
+.check-item.miss { border-left-color:var(--miss); }
+.check-item.warn { border-left-color:var(--warn); }
+
+.cb {
+  width:15px; height:15px; border:1px solid var(--gold-dim); border-radius:2px;
+  flex-shrink:0; margin-top:1px; display:flex; align-items:center; justify-content:center;
+  transition:all .1s;
+}
+.check-item.done .cb { background:var(--green-bg); border-color:var(--green); }
+.check-item.done .cb::after { content:'✓'; color:var(--green); font-size:11px; }
+
+.item-body { flex:1; }
+.item-text { font-size:13px; color:var(--text); }
+.item-note { font-size:11px; color:var(--text-dim); font-style:italic; margin-top:1px; }
+.miss-tag { font-size:9px; background:var(--miss-bg); color:var(--miss); padding:1px 5px; border-radius:3px; flex-shrink:0; margin-top:2px; }
+.warn-tag { font-size:9px; background:var(--warn-bg); color:var(--warn); padding:1px 5px; border-radius:3px; flex-shrink:0; margin-top:2px; }
+
+/* LEGEND */
+.legend { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:12px; font-size:11px; }
+.leg { display:flex; align-items:center; gap:5px; color:var(--text-dim); }
+.leg-bar { width:3px; height:14px; border-radius:1px; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+@media(max-width:700px) { .sidenav { display:none; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Elden Ring — Full Collectible Route</h1>
+    <p>Linear walkthrough · All categories · Base game only</p>
+  </div>
+  <div class="hdr-right">
+    <div class="hdr-stats">
+      <div class="hdr-stat"><span class="n" id="hd">0</span><span class="l">Done</span></div>
+      <div class="hdr-stat"><span class="n" id="ht">0</span><span class="l">Total</span></div>
+      <div class="hdr-stat"><span class="n" id="hp">0%</span><span class="l">Complete</span></div>
+    </div>
+    <button class="btn" onclick="expandAll()">Expand All</button>
+    <button class="btn" onclick="collapseAll()">Collapse</button>
+    <button class="btn danger" onclick="if(confirm('Reset all progress?')){localStorage.removeItem(SK);location.reload();}">Reset</button>
+  </div>
+</header>
+
+<div class="layout">
+<nav class="sidenav" id="sidenav"></nav>
+<div class="main" id="main"></div>
+</div>
+
+<script>
+const SK = 'er_route_v1';
+let state = {};
+try { state = JSON.parse(localStorage.getItem(SK) || '{}'); } catch(e) { state = {}; }
+
+// ══════════════════════════════════════════════════
+// ROUTE DATA
+// Each area has: id, name, subtitle, story, missWarn, items[]
+// Item: id, text, note, cat, miss(bool), warn(bool)
+// cats: weapon, armor, spell, catalyst, talisman, ash, spirit, stone, key, npc
+// ══════════════════════════════════════════════════
+
+const AREAS = [
+
+{
+  id:'a01', name:'Limgrave — West', subtitle:'Stranded Graveyard → Church of Elleh → Stormhill',
+  story: '<strong>Start here before anything else.</strong> Church of Elleh merchant Kalé dies when you first visit Roundtable Hold — buy his entire stock first. Start White Mask Varré\'s questline (bloody finger quest).',
+  miss: '⚠ Kalé dies on first Roundtable visit. Buy everything from him first. Talk to Varré at start.',
+  items:[
+    {id:'l01a',text:'Whetstone Knife',note:'Chest in Gatefront Ruins — unlocks Ashes of War system',cat:'key'},
+    {id:'l01b',text:'Ash of War: Storm Stomp',note:'Soldier of Godrick drop, or chest near Gatefront',cat:'ash'},
+    {id:'l01c',text:'Ash of War: Determination',note:'Warmaster\'s Shack — Knight Bernahl (daytime)',cat:'ash'},
+    {id:'l01d',text:'Ash of War: Quickstep',note:'Warmaster\'s Shack — Knight Bernahl purchase',cat:'ash'},
+    {id:'l01e',text:'Ash of War: Spinning Slash',note:'Warmaster\'s Shack purchase',cat:'ash'},
+    {id:'l01f',text:'Ash of War: Storm Blade',note:'Warmaster\'s Shack purchase',cat:'ash'},
+    {id:'l01g',text:'Ash of War: Parry',note:'Warmaster\'s Shack purchase',cat:'ash'},
+    {id:'l01h',text:'Ash of War: Unsheathe',note:'Warmaster\'s Shack purchase',cat:'ash'},
+    {id:'l01i',text:'Ash of War: Charge Forth',note:'Warmaster\'s Shack purchase',cat:'ash'},
+    {id:'l01j',text:'Ash of War: Kick',note:'Warmaster\'s Shack purchase',cat:'ash'},
+    {id:'l01k',text:'Ash of War: Ground Slam',note:'Warmaster\'s Shack purchase',cat:'ash'},
+    {id:'l01l',text:'Ash of War: Impaling Thrust',note:'Warmaster\'s Shack purchase',cat:'ash'},
+    {id:'l01m',text:'Ash of War: Stamp (Upward Cut)',note:'Warmaster\'s Shack purchase',cat:'ash'},
+    {id:'l01n',text:'Ash of War: Sacred Blade',note:'Tombsward Cave (north side of peninsula road)',cat:'ash'},
+    {id:'l01o',text:'Torch',note:'Merchant Kalé — buy all stock',cat:'catalyst'},
+    {id:'l01p',text:'Beast-Repellent Torch',note:'Merchant Kalé',cat:'catalyst'},
+    {id:'l01q',text:'Twinblade',note:'Dragon-Burnt Ruins cellar (east Agheel Lake)',cat:'weapon'},
+    {id:'l01r',text:'Lordsworn\'s Greatsword',note:'Gatefront Ruins chest',cat:'weapon'},
+    {id:'l01s',text:'Flail',note:'Gatefront Ruins — soldier drop',cat:'weapon'},
+    {id:'l01t',text:'Blue-Gold Kite Shield',note:'Gatefront Ruins chest',cat:'weapon'},
+    {id:'l01u',text:'Reduvia',note:'Bloody Finger Nerijus invasion — Murkwater Cave river',cat:'weapon',miss:true},
+    {id:'l01v',text:'Bloodstained Dagger',note:'Murkwater Cave boss drop — Patches related area',cat:'weapon'},
+    {id:'l01w',text:'Great Épée',note:'Chest east of Stormhill',cat:'weapon'},
+    {id:'l01x',text:'Uchigatana',note:'Deathtouched Catacombs (if not started as Samurai)',cat:'weapon'},
+    {id:'l01y',text:'Cipher Pata',note:'Stormhill Shack — on corpse near Roderika',cat:'weapon'},
+    {id:'l01z',text:'Shortsword / Longsword / Halberd',note:'Various soldiers — standard drops, check by Gatefront',cat:'weapon'},
+    {id:'l01aa',text:'Lone Wolf Ashes',note:'Roderika gives — Stormhill Shack',cat:'spirit'},
+    {id:'l01ab',text:'Jellyfish Ashes',note:'Stormhill Shack area or Roderika route',cat:'spirit'},
+    {id:'l01ac',text:'Wandering Noble Ashes',note:'Stranded Graveyard or early Limgrave loot',cat:'spirit'},
+    {id:'l01ad',text:'Fanged Imp Ashes',note:'Stormfoot Catacombs',cat:'spirit'},
+    {id:'l01ae',text:'Warhawk Ashes',note:'Stormveil exterior ramparts (get now or during castle)',cat:'spirit'},
+    {id:'l01af',text:'Crucible Aspect: Tail (incantation)',note:'Stormhill Evergaol',cat:'spell'},
+    {id:'l01ag',text:'Ash of War: Blood Blade',note:'Night\'s Cavalry — Limgrave Bridge (night only)',cat:'ash'},
+    {id:'l01ah',text:'Ash of War: Barricade Shield',note:'Night\'s Cavalry — Weeping Peninsula bridge (night) — grab while passing through',cat:'ash'},
+    {id:'l01ai',text:'Ash of War: Spectral Lance',note:'Night\'s Cavalry — Liurnia (do when there)',cat:'ash'},
+    {id:'l01aj',text:'Lantern',note:'Isolated Merchant, Weeping Peninsula — small detour worth it',cat:'catalyst'},
+    {id:'l01ak',text:'Prayerful Strike (Ash of War)',note:'Warmaster\'s Shack',cat:'ash'},
+    {id:'l01al',text:'Twinbird Kite Shield',note:'Stormgate, near Erdtree sapling',cat:'weapon'},
+    {id:'l01am',text:'Blue Dancer Charm',note:'On a body near Stormgate Erdtree — very easy to miss',cat:'talisman',miss:true},
+    {id:'l01an',text:'Two Fingers Heirloom',note:'Purified Ruins, Liurnia — get when you reach there',cat:'talisman'},
+  ]
+},
+
+{
+  id:'a02', name:'Weeping Peninsula', subtitle:'Optional but efficient to clear now',
+  story:'Small self-contained area. Mostly weapons, one spirit ash, one ash of war. Irina/Edgar questline starts here — don\'t kill Edgar.',
+  warn:'Talk to Irina on the road south. Give her letter to Edgar at Castle Morne. Don\'t kill Edgar — he reappears in Liurnia.',
+  items:[
+    {id:'wp01',text:'Winged Scythe',note:'Tombsward Ruins chest',cat:'weapon'},
+    {id:'wp02',text:'Claymore',note:'Castle Morne, loot in camp area',cat:'weapon'},
+    {id:'wp03',text:'Grafted Blade Greatsword',note:'Leonine Misbegotten boss — Castle Morne',cat:'weapon'},
+    {id:'wp04',text:'Erdsteel Dagger',note:'Castle Morne ramparts',cat:'weapon'},
+    {id:'wp05',text:'Scimitar / Shotel',note:'Castle Morne soldiers — farmable',cat:'weapon'},
+    {id:'wp06',text:'Ash of War: Barricade Shield',note:'Night\'s Cavalry, Weeping Peninsula (night)',cat:'ash'},
+    {id:'wp07',text:'Ash of War: Sacred Blade',note:'Tombsward Cave',cat:'ash'},
+    {id:'wp08',text:'Lhutel the Headless',note:'Tombsward Catacombs — Cemetery Shade boss',cat:'spirit'},
+    {id:'wp09',text:'Demi-Human Ashes',note:'Morne Tunnel boss',cat:'spirit'},
+    {id:'wp10',text:'Winged Misbegotten Ashes',note:'Morne Tunnel',cat:'spirit'},
+    {id:'wp11',text:'Crystal Knife',note:'Morne Tunnel',cat:'weapon'},
+    {id:'wp12',text:'Sacrificial Axe',note:'Minor Erdtree Catacombs',cat:'weapon'},
+    {id:'wp13',text:'Hatchet',note:'Various — soldier drops',cat:'weapon'},
+    {id:'wp14',text:'Lantern',note:'Isolated Merchant, SW Peninsula — if not bought yet',cat:'catalyst'},
+    {id:'wp15',text:'Crucible Aspect: Horns (incantation)',note:'Stormhill Evergaol — return if missed',cat:'spell'},
+  ]
+},
+
+{
+  id:'a03', name:'Stormveil Castle', subtitle:'Margit → Godrick',
+  story:'Buy all Gostoc\'s stock BEFORE entering the throne room. Gostoc dies after Godrick. Summon Nepheli in the throne room to progress her quest. Get all the spirit ashes in the castle.',
+  miss:'⚠ Gostoc dies after Godrick. Buy his entire stock first. Nepheli summon sign in throne room — activate it to progress her quest. Get Warhawk Ashes from ramparts if not already done.',
+  items:[
+    {id:'sv01',text:'Ornamental Straight Sword',note:'Godrick Soldier drop — rare, or Erdtree Burial Watchdog Stormfoot Catacombs',cat:'weapon'},
+    {id:'sv02',text:'Banished Knight\'s Halberd',note:'Banished Knight drops',cat:'weapon'},
+    {id:'sv03',text:'Banished Knight Set',note:'Banished Knight enemy drops — farmable',cat:'armor'},
+    {id:'sv04',text:'Godrick Knight Set',note:'Godrick Knight enemy drops',cat:'armor'},
+    {id:'sv05',text:'Godrick Soldier Set',note:'Soldier enemies — farmable',cat:'armor'},
+    {id:'sv06',text:'Stormhawk Axe',note:'Stormhawk Knight drop, castle ramparts',cat:'weapon'},
+    {id:'sv07',text:'Warhawk Ashes',note:'Castle ramparts — bird enemy area',cat:'spirit'},
+    {id:'sv08',text:'Rogier\'s Rapier +8',note:'Rogier gives after his quest — or loot on death',cat:'weapon',miss:true},
+    {id:'sv09',text:'Spellblade Set (Rogier)',note:'Same — Rogier\'s set',cat:'armor',miss:true},
+    {id:'sv10',text:'Ash of War: Storm Stomp',note:'If not collected in Limgrave',cat:'ash'},
+    {id:'sv11',text:'Godrick\'s Axe',note:'Enia — Godrick Remembrance',cat:'weapon'},
+    {id:'sv12',text:'Grafted Dragon (fist)',note:'Enia — Godrick Remembrance (use mausoleum dupe to get both)',cat:'weapon'},
+    {id:'sv13',text:'Axe of Godrick',note:'Enia — Godrick Remembrance alt (one of the two above)',cat:'weapon'},
+    {id:'sv14',text:'Godrick\'s Great Rune',note:'Activate at Limgrave Divine Tower',cat:'key'},
+    {id:'sv15',text:'Glintstone Sorcerer Ashes',note:'Raya Lucaria Crystal Tunnel — do when in Liurnia but note it here',cat:'spirit'},
+  ]
+},
+
+{
+  id:'a04', name:'Liurnia of the Lakes — West & South', subtitle:'Post-Stormveil / Raya Lucaria approach',
+  story:'<strong>Critical: Start Ranni\'s quest immediately.</strong> Go to Ranni\'s Rise (northwest of Caria Manor) as soon as possible. Also start Sellen\'s quest at Waypoint Ruins. Talk to everyone at the Academy Gate Town. Sorceress Sellen is in Waypoint Ruins cellar.',
+  warn:'Buy all of Sellen\'s stock. Buy Thops\' stock. Start Rogier\'s quest if not done. Patches moves here from Murkwater.',
+  items:[
+    {id:'li01',text:'Academy Glintstone Key',note:'Glintstone Dragon Smarag (sleep it) or buy from Patches later',cat:'key'},
+    {id:'li02',text:'Imbued Sword Key x3',note:'Four Belfries — one per belfy platform. Needed for Chapel of Anticipation revisit.',cat:'key'},
+    {id:'li03',text:'Stormhawk Deenh',note:'Revisit Chapel of Anticipation via Four Belfries (Imbued Sword Key)',cat:'spirit',miss:true},
+    {id:'li04',text:'Carian Knight\'s Sword',note:'Chest at Academy Gate Town',cat:'weapon'},
+    {id:'li05',text:'Glintstone Kris',note:'Sellen questline — she gives it',cat:'catalyst',miss:true},
+    {id:'li06',text:'Carian Glintblade Staff',note:'Caria Manor upper area / chest',cat:'catalyst'},
+    {id:'li07',text:'Carian Glintstone Staff',note:'Carian Knight drop — Caria Manor',cat:'catalyst'},
+    {id:'li08',text:'Crystal Staff',note:'Chest in Raya Lucaria library area',cat:'catalyst'},
+    {id:'li09',text:'Sword of Night and Flame',note:'Caria Manor — locked room chest',cat:'weapon'},
+    {id:'li10',text:'Royal Knight Loretta\'s set',note:'Caria Manor boss area / Enia after',cat:'armor'},
+    {id:'li11',text:'Ash of War: Carian Grandeur',note:'Kingsrealm Ruins — chest',cat:'ash'},
+    {id:'li12',text:'Ash of War: Carian Retaliation',note:'Study Hall Entrance, southwest Liurnia',cat:'ash'},
+    {id:'li13',text:'Ash of War: Glintblade Phalanx',note:'Caria Manor chest',cat:'ash'},
+    {id:'li14',text:'Ash of War: Spectral Lance',note:'Night\'s Cavalry — Liurnia (night)',cat:'ash'},
+    {id:'li15',text:'Ash of War: Ice Spear',note:'Ruin-Strewn Precipice',cat:'ash'},
+    {id:'li16',text:'Ash of War: Hoarfrost Stomp',note:'Southeast shore of Liurnia — on a teardrop scarab',cat:'ash'},
+    {id:'li17',text:'Ash of War: Bloodhound\'s Step',note:'Night\'s Cavalry — Lenne\'s Rise bridge, Caelid border (night)',cat:'ash'},
+    {id:'li18',text:'Glintstone Pebble',note:'Sellen sells — buy all sorcery stock',cat:'spell'},
+    {id:'li19',text:'Great Glintstone Shard',note:'Sellen',cat:'spell'},
+    {id:'li20',text:'Swift Glintstone Shard',note:'Sellen',cat:'spell'},
+    {id:'li21',text:'Glintstone Stars',note:'Sellen',cat:'spell'},
+    {id:'li22',text:'Star Shower',note:'Sellen',cat:'spell'},
+    {id:'li23',text:'Glintstone Cometshard',note:'Sellen or Academy',cat:'spell'},
+    {id:'li24',text:'Comet',note:'Sellen',cat:'spell'},
+    {id:'li25',text:'Starlight',note:'Sellen',cat:'spell'},
+    {id:'li26',text:'Magic Glintblade',note:'Sellen',cat:'spell'},
+    {id:'li27',text:'Carian Slicer',note:'Sellen',cat:'spell'},
+    {id:'li28',text:'Carian Piercer',note:'Sellen',cat:'spell'},
+    {id:'li29',text:'Transient Moonlight',note:'Sellen',cat:'spell'},
+    {id:'li30',text:'Scholar\'s Armament',note:'Sellen',cat:'spell'},
+    {id:'li31',text:'Scholar\'s Shield',note:'Sellen',cat:'spell'},
+    {id:'li32',text:'Lucidity',note:'Sellen',cat:'spell'},
+    {id:'li33',text:'Glintstone Arc',note:'Academy — loot or Sellen',cat:'spell'},
+    {id:'li34',text:'Thops\' Barrier',note:'Buy from Thops — he\'s at the Church of Irith',cat:'spell',miss:true},
+    {id:'li35',text:'Thops\' Armor Set',note:'Thops dies after you give him Academy Key — loot body',cat:'armor',miss:true},
+    {id:'li36',text:'Lazuli Glintstone Sword',note:'Academy — sorcerer area',cat:'weapon'},
+    {id:'li37',text:'Academy Glintstone Staff',note:'Glintstone Sorcerer drop',cat:'catalyst'},
+    {id:'li38',text:'Meteorite Staff',note:'Street of Sages Ruins, Caelid (do on Caelid visit) — note here to not forget',cat:'catalyst'},
+    {id:'li39',text:'Skeletal Militiaman Ashes',note:'Summonwater Village — Tibia Mariner boss',cat:'spirit'},
+    {id:'li40',text:'Latenna the Albinauric',note:'Lakeside Crystal Cave boss then talk to Latenna outside',cat:'spirit',miss:true},
+    {id:'li41',text:'Marionette Soldier Ashes',note:'Ruin-Strewn Precipice',cat:'spirit'},
+    {id:'li42',text:'Black Knife Tiche',note:'Ringleader\'s Evergaol (night, Moonfolk Ruins)',cat:'spirit'},
+    {id:'li43',text:'Two Fingers Heirloom talisman',note:'Purified Ruins',cat:'talisman'},
+    {id:'li44',text:'Moon of Nokstella talisman (Legendary)',note:'Nokstella, Eternal City — do later but flag now',cat:'talisman'},
+    {id:'li45',text:'Radagon Icon talisman (Legendary)',note:'Raya Lucaria Academy chest',cat:'talisman'},
+    {id:'li46',text:'Preceptor\'s Set',note:'Preceptor Miriam drop or found in Academy',cat:'armor'},
+    {id:'li47',text:'Queen of Full Moon Set',note:'Raya Lucaria — roaming or post-Rennala via Enia',cat:'armor'},
+    {id:'li48',text:'Sage Set',note:'Thops — take from body after he dies at Study Hall',cat:'armor',miss:true},
+    {id:'li49',text:'Carian Knight Set',note:'Carian Knight drops — Caria Manor',cat:'armor'},
+    {id:'li50',text:'Blackguard\'s Set + Iron Ball',note:'Buy prawns from Blackguard Boggart (east Liurnia). He reappears at Leyndell moat.',cat:'armor',miss:true},
+    {id:'li51',text:'Ash of War: Carian Slash',note:'Caria Manor drop',cat:'ash'},
+    {id:'li52',text:'Rennala\'s Full Moon (Legendary spell)',note:'Enia — Rennala Remembrance',cat:'spell'},
+    {id:'li53',text:'Carian Regal Scepter (Legendary)',note:'Enia — Rennala Remembrance alt',cat:'catalyst'},
+  ]
+},
+
+{
+  id:'a05', name:'Raya Lucaria Academy', subtitle:'Rennala',
+  story:'Full loot run of the Academy before and after Rennala. Buy Miriel\'s stock at Church of Vows (east Liurnia).',
+  warn:'Get Crystal Staff from library chest. Radagon Icon talisman is in a chest here — Legendary.',
+  items:[
+    {id:'ra01',text:'Radagon Icon (Legendary talisman)',note:'Academy chest — upper floor area',cat:'talisman'},
+    {id:'ra02',text:'Crystal Staff',note:'Library chest, upper Raya Lucaria',cat:'catalyst'},
+    {id:'ra03',text:'Lazuli Glintstone Sword',note:'Glintstone Sorcerer drop',cat:'weapon'},
+    {id:'ra04',text:'Crystal Sword',note:'Crystalian drop, Raya Lucaria',cat:'weapon'},
+    {id:'ra05',text:'Full Moon Crossbow',note:'Crystalian Crossbowman drop',cat:'weapon'},
+    {id:'ra06',text:'Raya Lucarian Soldier Set',note:'Various drops',cat:'armor'},
+    {id:'ra07',text:'Preceptor\'s Set',note:'Preceptor Miriam or roaming preceptors',cat:'armor'},
+    {id:'ra08',text:'Glintstone Crowns (Twinsage, Karolos, etc)',note:'Each crown from specific Crystalians or chests — check all side paths',cat:'armor'},
+    {id:'ra09',text:'Olivinus Glintstone Crown',note:'Crystalian trio, Raya Lucaria',cat:'armor'},
+    {id:'ra10',text:'Karolos Glintstone Crown',note:'Crystalian drop',cat:'armor'},
+    {id:'ra11',text:'Twinsage Glintstone Crown',note:'Crystalian duo',cat:'armor'},
+    {id:'ra12',text:'Glintstone Pebble / Shard sorceries',note:'Loot throughout academy',cat:'spell'},
+    {id:'ra13',text:'Miriel: all sorcery purchases (Church of Vows)',note:'Renewing Boluses recipe + various sorceries',cat:'spell'},
+    {id:'ra14',text:'Carian Greatsword (spell)',note:'Miriel or loot',cat:'spell'},
+    {id:'ra15',text:'Carian Phalanx (spell)',note:'Miriel',cat:'spell'},
+    {id:'ra16',text:'Glintstone Icecrag',note:'Miriel',cat:'spell'},
+    {id:'ra17',text:'Freezing Mist',note:'Miriel',cat:'spell'},
+    {id:'ra18',text:'Rennala Set',note:'Enia after Remembrance or loot in Academy',cat:'armor'},
+  ]
+},
+
+{
+  id:'a06', name:'Liurnia — North (Caria Manor)', subtitle:'Ranni quest start, Black Knife Catacombs',
+  story:'Caria Manor clears the way to Ranni\'s Rise. Start Ranni\'s quest here — it\'s a long chain and every step matters. Snow Witch Set is in Renna\'s Rise (locked until you talk to Ranni). Black Knife Catacombs is in north Liurnia — do it on the way.',
+  warn:'Snow Witch Set requires talking to Ranni first. Buy D\'s Bell Bearing items from Twin Maiden Husks after his questline resolves.',
+  items:[
+    {id:'ln17',text:'Snow Witch Set (Ranni)',note:'Renna\'s Rise tower chest — after starting Ranni\'s quest',cat:'armor'},
+    {id:'ln18',text:'Black Knife Set',note:'Black Knife Assassin drop — Black Knife Catacombs or Sage\'s Cave (Altus)',cat:'armor'},
+    {id:'ln19',text:'D\'s Set (D Hunter of Dead)',note:'D questline — dropped on death or quest resolution',cat:'armor',miss:true},
+    {id:'ln08',text:'Ancient Death Rancor (sorcery)',note:'Black Knife Catacombs boss drop',cat:'spell'},
+    {id:'ln23',text:'Ash of War: Cragblade',note:'Black Knife Catacombs',cat:'ash'},
+    {id:'ln24',text:'Ash of War: Assassin\'s Gambit',note:'Black Knife Catacombs',cat:'ash'},
+    {id:'ln12',text:'Gargoyle\'s Blackblade',note:'Black Blade Kindred — Bestial Sanctum, Dragonbarrow (easier to grab on Caelid pass)',cat:'weapon'},
+  ]
+},
+
+{
+  id:'a06b', name:'Siofra River', subtitle:'Underground — enter via well in Mistwood, Limgrave',
+  story:'Accessible early but you\'ll be back. The Ancestor Spirit boss requires lighting all eight braziers. Siofra Aqueduct leads to Deeproot Depths. This is also where you first encounter the path toward Nokron from below.',
+  warn:'Ancestral Follower Ashes require defeating Ancestor Spirit. Collect the Mushroom Crown before leaving — it\'s easy to walk past.',
+  items:[
+    {id:'sr01',text:'Ancestral Follower Ashes',note:'Ancestor Spirit boss — light all 8 braziers first',cat:'spirit'},
+    {id:'sr02',text:'Ancestral Spirit\'s Horn (talisman)',note:'Ancestor Spirit drop',cat:'talisman'},
+    {id:'sr03',text:'Mushroom Crown',note:'Siofra River — fungal shroom cluster near the deep well',cat:'armor'},
+    {id:'sr04',text:'Armorer\'s Cookbook [6]',note:'Siofra River loot — scarlet rot crafting recipes',cat:'key'},
+    {id:'sr05',text:'Nomadic Warrior\'s Cookbook [13]',note:'Siofra River loot',cat:'key'},
+    {id:'sr06',text:'Crucible Aspect: Tail (incantation)',note:'If not grabbed from Stormhill Evergaol, check Siofra area',cat:'spell'},
+    {id:'sr07',text:'Staff of Loss',note:'Nokron side of Siofra Aqueduct — technically Nokron loot, flagged here as you pass through',cat:'catalyst'},
+  ]
+},
+
+{
+  id:'a06c', name:'Nokron, Eternal City', subtitle:'Underground — opens after defeating Radahn',
+  story:'<strong>Requires Radahn dead.</strong> Enter via crater in Mistwood. Nokron contains the Fingerslayer Blade for Ranni\'s quest — do not leave without it. Mimic Tear is behind an imp-sealed fog gate in Night\'s Sacred Ground. Full loot run before moving to Ainsel.',
+  miss:'⚠ Fingerslayer Blade — Ranni\'s quest cannot progress without it. Mimic Tear requires Stonesword Key. Gargoyle duo boss at waterfall basin leads to Deeproot Depths.',
+  items:[
+    {id:'nk01',text:'Fingerslayer Blade',note:'Night\'s Sacred Ground chest — give to Ranni to progress her quest',cat:'key',miss:true},
+    {id:'nk02',text:'Mimic Tear (Legendary spirit)',note:'Night\'s Sacred Ground — imp sealed fog gate, requires Stonesword Key',cat:'spirit'},
+    {id:'nk03',text:'Nightmaiden & Swordstress Ashes',note:'Chest near Mimic Tear grace',cat:'spirit'},
+    {id:'nk04',text:'Nox Flowing Sword',note:'Nox Swordstress & Priest duo boss, Nokron Eternal City',cat:'weapon'},
+    {id:'nk05',text:'Gargoyle\'s Black Halberd',note:'Valiant Gargoyle duo boss, waterfall basin — also unlocks Deeproot Depths path',cat:'weapon'},
+    {id:'nk06',text:'Ash of War: Phantom Slash',note:'Teardrop scarab, Nokron',cat:'ash'},
+    {id:'nk07',text:'Stonesword Key (several)',note:'Loot throughout Nokron — pick up all',cat:'key'},
+    {id:'nk08',text:'Silver Tear Mask',note:'Silver Tear enemy drop, Nokron',cat:'armor'},
+    {id:'nk09',text:'Black Whetblade',note:'Night\'s Sacred Ground chest — unlocks Blood and Poison affinities',cat:'key'},
+  ]
+},
+
+{
+  id:'a06d', name:'Ainsel River & Nokstella, Eternal City', subtitle:'Underground — via sending gate in Ranni\'s Rise (after giving Fingerslayer Blade)',
+  story:'Ranni sends you here via a sending gate in Ranni\'s Rise after you give her the Fingerslayer Blade. Nokstella has the Moon of Nokstella (Legendary talisman) and leads to the Astel fight, which unlocks the Moonlight Altar plateau for Ranni\'s Dark Moon.',
+  miss:'⚠ Moon of Nokstella is a Legendary talisman in a chest — easy to miss on a fast run. Astel boss unlocks Moonlight Altar — required for Ranni\'s ending.',
+  items:[
+    {id:'ai01',text:'Moon of Nokstella (Legendary talisman)',note:'Nokstella Eternal City — chest in throne room area',cat:'talisman'},
+    {id:'ai02',text:'Dragonscale Blade',note:'Dragonkin Soldier of Nokstella boss',cat:'weapon'},
+    {id:'ai03',text:'Bastard\'s Stars',note:'Enia — Astel, Naturalborn of the Void Remembrance',cat:'weapon'},
+    {id:'ai04',text:'Staff of Loss',note:'Nokstella or Siofra Aqueduct area — carved into the wall loot',cat:'catalyst'},
+    {id:'ai05',text:'Nokstella Evergoal — Baleful Shadow',note:'Kill for Discarded Palace Key → unlocks Rennala\'s chest → Dark Moon Ring',cat:'key',miss:true},
+    {id:'ai06',text:'Dark Moon Ring',note:'Rennala\'s chest at Raya Lucaria (after Baleful Shadow) — give to Ranni at end',cat:'key',miss:true},
+    {id:'ai07',text:'Ghost Glovewort Bell Bearing [1]',note:'Nokstella chest — speeds up spirit ash upgrading',cat:'stone'},
+    {id:'ai08',text:'Ghost Glovewort Bell Bearing [2]',note:'Nokstella chest',cat:'stone'},
+    {id:'ai09',text:'Dewkissed Herba (crafting)',note:'Ainsel River loot — various',cat:'key'},
+  ]
+},
+
+{
+  id:'a06e', name:'Deeproot Depths', subtitle:'Underground — via Siofra Aqueduct (after Gargoyle duo) or Leyndell sewers',
+  story:'Two access routes: Siofra Aqueduct after the Gargoyle duo, or through the Subterranean Shunning Grounds under Leyndell. Fia\'s questline resolves here — you need the Cursemark of Death (from Ranni\'s questline, Divine Tower of Liurnia) to trigger Lichdragon Fortissax. Crucible Knight Siluria is in an Evergaol here.',
+  miss:'⚠ Waves of Darkness (Lichdragon Fortissax Remembrance) requires completing Fia\'s quest — embrace her with the Cursemark of Death. Prince of Death\'s Staff is a chest near the roots.',
+  items:[
+    {id:'dd01',text:'Waves of Darkness',note:'Enia — Lichdragon Fortissax Remembrance. Requires Fia quest (Cursemark of Death).',cat:'weapon',miss:true},
+    {id:'dd02',text:'Fortissax\'s Lightning Spear (incantation)',note:'Enia — Lichdragon Fortissax Remembrance alt',cat:'spell',miss:true},
+    {id:'dd03',text:'Crucible Knight Siluria (spirit)',note:'Across the Roots Evergaol, Deeproot Depths',cat:'spirit'},
+    {id:'dd04',text:'Prince of Death\'s Staff',note:'Chest near the roots, Deeproot Depths',cat:'catalyst'},
+    {id:'dd05',text:'Fia\'s Set',note:'Fia drops her set at end of questline',cat:'armor',miss:true},
+    {id:'dd06',text:'Mending Rune of the Death-Prince',note:'Fia quest completion reward — required for Age of Duskborn ending',cat:'key',miss:true},
+    {id:'dd07',text:'D\'s Bell Bearing',note:'D\'s brother quest resolution in Deeproot Depths',cat:'stone',miss:true},
+    {id:'dd08',text:'Ash of War: Vacuum Slice',note:'Deeproot Depths teardrop scarab',cat:'ash'},
+    {id:'dd09',text:'Erdtree Greatbow',note:'Across the roots area loot',cat:'weapon'},
+  ]
+},
+
+{
+  id:'a07', name:'Caelid & Dragonbarrow', subtitle:'Post-Radahn / Parallel with Liurnia',
+  story:'Do Radahn\'s festival at Redmane Castle. Radahn drops open Nokron. Clear Caelid dungeons. Dragonbarrow is optional but has the Dragon Communion Seal and Isolated Merchant. Gowry\'s shop — buy all stock. Start Millicent\'s quest.',
+  miss:'⚠ Gowry moves after Millicent quest progresses — buy all his stock on first visit. Get Meteorite Staff from Street of Sages Ruins swamp.',
+  items:[
+    {id:'ca01',text:'Meteorite Staff',note:'Street of Sages Ruins — chest in swamp',cat:'catalyst'},
+    {id:'ca02',text:'Moonveil (Legendary)',note:'Magma Wyrm boss, Gael Tunnel',cat:'weapon'},
+    {id:'ca03',text:'Ruins Greatsword (Legendary)',note:'Crucible Knight + Misbegotten Warrior duo, Redmane Castle',cat:'weapon'},
+    {id:'ca04',text:'Starscourge Greatsword',note:'Enia — Radahn Remembrance',cat:'weapon'},
+    {id:'ca05',text:'Lion Greatbow',note:'Enia — Radahn Remembrance alt',cat:'weapon'},
+    {id:'ca06',text:'Dragon Communion Seal',note:'Isolated Divine Tower, Dragonbarrow — chest',cat:'catalyst'},
+    {id:'ca07',text:'Antspur Rapier',note:'Maleigh Marais invasion — Shaded Castle (Altus) but note here',cat:'weapon'},
+    {id:'ca08',text:'Rotten Crystal Staff',note:'Elphael later — note here',cat:'catalyst'},
+    {id:'ca09',text:'Gargoyle\'s Blackblade',note:'Black Blade Kindred at Bestial Sanctum',cat:'weapon'},
+    {id:'ca10',text:'War Surgeon Set',note:'Mohgwyn Palace — War Surgeon (White Mask Varré area)',cat:'armor'},
+    {id:'ca11',text:'Rotten Stray Ashes',note:'Caelid Waypoint Ruins boss',cat:'spirit'},
+    {id:'ca12',text:'Mad Pumpkin Head Ashes',note:'Caelem Ruins boss',cat:'spirit'},
+    {id:'ca13',text:'Redmane Knight Ogha (spirit)',note:'War-Dead Catacombs — Cleanrot Knight boss',cat:'spirit'},
+    {id:'ca14',text:'Giant Rat Ashes',note:'Sellia Hideaway',cat:'spirit'},
+    {id:'ca15',text:'Kindred of Rot Ashes',note:'Seethewater Cave boss',cat:'spirit'},
+    {id:'ca16',text:'Ash of War: Flame of the Redmanes',note:'Fort Gael — teardrop scarab',cat:'ash'},
+    {id:'ca17',text:'Ash of War: Lion\'s Claw',note:'Fort Gael chest',cat:'ash'},
+    {id:'ca18',text:'Ash of War: Through and Through',note:'Caelid — teardrop scarab',cat:'ash'},
+    {id:'ca19',text:'Ash of War: Bloodhound\'s Step',note:'Night\'s Cavalry — Lenne\'s Rise bridge (night)',cat:'ash'},
+    {id:'ca20',text:'Pestilent Mist (sorcery)',note:'Gowry sells',cat:'spell'},
+    {id:'ca21',text:'Pest Threads (incantation)',note:'Gowry sells',cat:'spell'},
+    {id:'ca22',text:'Greyoll\'s Roar (Legendary incantation)',note:'Enia — Elder Dragon Greyoll Remembrance',cat:'spell'},
+    {id:'ca23',text:'All Dragon Communion sorceries',note:'Cathedral of Dragon Communion, Caelid — exchange Dragon Hearts',cat:'spell'},
+    {id:'ca24',text:'Dragon incantations (Limgrave Church + Caelid Cathedral)',note:'Incantations: Dragonfire, Dragonice, etc — Dragon Hearts',cat:'spell'},
+    {id:'ca25',text:'Crucible Aspect: Horns / Tail incantations',note:'Evergaol drops — check Stormhill + Ulcerated Tree Spirit areas',cat:'spell'},
+    {id:'ca26',text:'Kindred of Rot\'s Exultation talisman',note:'Kindred of Rot drop, Seethewater Cave',cat:'talisman'},
+    {id:'ca27',text:'Radagon\'s Soreseal (Legendary talisman)',note:'Fort Faroth, Dragonbarrow — chest',cat:'talisman'},
+    {id:'ca28',text:'Old Knight\'s Set',note:'Fort Faroth area drops',cat:'armor'},
+    {id:'ca29',text:'Bell Bearing: Somber Miner 1',note:'Sellia Crystal Tunnel boss',cat:'stone'},
+    {id:'ca30',text:'Smithing Miner Bell Bearing 1',note:'Raya Lucaria Crystal Tunnel boss — Liurnia, note here',cat:'stone'},
+  ]
+},
+
+{
+  id:'a08', name:'Atlus Plateau', subtitle:'Post-Dectus Lift / Alt: Ruin-Strewn Precipice',
+  story:'Large area. Volcano Manor questline critical — do ALL contracts before Rykard. Start Rya questline. Buy from Hermit Merchant at Hermit Shack. Shaded Castle has Elemer and Antspur Rapier.',
+  miss:'⚠ Bolt of Gransax is in Leyndell on a giant spear and is PERMANENTLY MISSABLE after Maliketh. Get it this visit.',
+  items:[
+    {id:'at01',text:'Marais Executioner\'s Sword',note:'Elemer of the Briar, Shaded Castle',cat:'weapon'},
+    {id:'at02',text:'Antspur Rapier',note:'Maleigh Marais invasion, Shaded Castle moat',cat:'weapon'},
+    {id:'at03',text:'Gelmir Glintstone Staff',note:'Hermit Village, Mt Gelmir',cat:'catalyst'},
+    {id:'at04',text:'Azur\'s Glintstone Staff',note:'Next to Primeval Sorcerer Azur, Mt Gelmir',cat:'catalyst'},
+    {id:'at05',text:'Comet Azur (Legendary sorcery)',note:'Talk to Primeval Sorcerer Azur, Mt Gelmir',cat:'spell'},
+    {id:'at06',text:'Azur\'s Glintstone Set',note:'Near Primeval Sorcerer Azur',cat:'armor'},
+    {id:'at07',text:'Ash of War: Sword Dance',note:'Unsightly Catacombs, Altus',cat:'ash'},
+    {id:'at08',text:'Ash of War: Giant Hunt',note:'Sainted Hero\'s Grave',cat:'ash'},
+    {id:'at09',text:'Ash of War: Royal Knight\'s Resolve',note:'Sealed Tunnel',cat:'ash'},
+    {id:'at10',text:'Ash of War: Piercing Fang',note:'Old Altus Tunnel',cat:'ash'},
+    {id:'at11',text:'Ash of War: Thunderbolt',note:'Altus Plateau — teardrop scarab near capital',cat:'ash'},
+    {id:'at12',text:'Ash of War: Shield Crash',note:'Foot of the Four Belfries, Liurnia (if not done)',cat:'ash'},
+    {id:'at13',text:'Ash of War: Shared Order',note:'Minor Erdtree Church area',cat:'ash'},
+    {id:'at14',text:'Ash of War: Gravitas',note:'Seethewater area — already noted in Caelid',cat:'ash'},
+    {id:'at15',text:'Ash of War: Flaming Strike',note:'Volcano Manor area — teardrop scarab',cat:'ash'},
+    {id:'at16',text:'Ash of War: Eruption',note:'Volcano Manor area',cat:'ash'},
+    {id:'at17',text:'Ash of War: Magma Shower',note:'Volcano Manor / Mt Gelmir',cat:'ash'},
+    {id:'at18',text:'Golden Order Seal',note:'Minor Erdtree Church, Altus',cat:'catalyst'},
+    {id:'at19',text:'Ancient Dragon Knight Kristoff (spirit)',note:'Sainted Hero\'s Grave',cat:'spirit'},
+    {id:'at20',text:'Avionette Soldier Ashes',note:'Sage\'s Cave',cat:'spirit'},
+    {id:'at21',text:'Crucible Scale Talisman',note:'Altus Tunnel',cat:'talisman'},
+    {id:'at22',text:'Arsenal Charm +1',note:'Volcano Manor chest',cat:'talisman'},
+    {id:'at23',text:'Smithing Miner Bell Bearing 2',note:'Sealed Tunnel boss',cat:'stone'},
+    {id:'at24',text:'Alberich\'s Set',note:'Fringefolk Hero\'s Grave — Stormveil area actually, check here',cat:'armor'},
+    {id:'at25',text:'Tree Sentinel Set',note:'Draconic Tree Sentinel drop or Capital Outskirts',cat:'armor'},
+    {id:'at26',text:'Knight Set (various)',note:'Various knight enemies on plateau',cat:'armor'},
+  ]
+},
+
+{
+  id:'a09', name:'Volcano Manor & Mt Gelmir', subtitle:'ALL contracts before Rykard',
+  story:'Do all three VM assassination contracts THEN kill Rykard. Tanith gives rewards after each contract. After Rykard, find Patches at Shaded Castle (he moved). Get all VM armour before killing Rykard.',
+  miss:'⚠ Completing all 3 contracts unlocks Hoslow\'s Petal Whip and Magma Whip Candlestick. Doing contracts out of order or killing Rykard first locks you out of these forever. Rya\'s armor from her questline.',
+  items:[
+    {id:'vm01',text:'Magma Whip Candlestick',note:'VM Contract 3 reward (Juno Hoslow)',cat:'weapon',miss:true},
+    {id:'vm02',text:'Hoslow\'s Petal Whip',note:'Kill Juno Hoslow (Contract 3)',cat:'weapon',miss:true},
+    {id:'vm03',text:'Devourer\'s Scepter',note:'Contract kill: Bernahl — or invade him at Farum Azula later',cat:'weapon',miss:true},
+    {id:'vm04',text:'Inquisitor\'s Girandole',note:'Abductor Virgin duo boss, Volcano Manor basement',cat:'weapon'},
+    {id:'vm05',text:'Rykard\'s Rancor (spell)',note:'Enia — Rykard Remembrance',cat:'spell'},
+    {id:'vm06',text:'Serpentbone Blade',note:'Enia — Rykard Remembrance alt',cat:'weapon'},
+    {id:'vm07',text:'Volcano Manor Set',note:'Tanith reward after all contracts',cat:'armor',miss:true},
+    {id:'vm08',text:'Rileigh\'s Set',note:'Contract kill: Rileigh the Idle',cat:'armor',miss:true},
+    {id:'vm09',text:'Hoslow\'s Set',note:'Contract kill: Juno Hoslow',cat:'armor',miss:true},
+    {id:'vm10',text:'Zorayas Set (Rya)',note:'Progress Rya questline — Leyndell / here',cat:'armor',miss:true},
+    {id:'vm11',text:'Lusat\'s Glintstone Staff',note:'Sellia Hideaway — Sellen quest (Caelid)',cat:'catalyst',miss:true},
+    {id:'vm12',text:'Lusat\'s Set',note:'Sellia Hideaway',cat:'armor'},
+    {id:'vm13',text:'St Trina\'s Torch',note:'Forsaken Ruins, Altus Plateau',cat:'catalyst'},
+    {id:'vm14',text:'Sentry\'s Torch',note:'Leyndell — merchant or camp loot',cat:'catalyst'},
+    {id:'vm15',text:'Stars of Ruin (Legendary sorcery)',note:'Sellen quest: give her Lusat\'s Glintstone Orb',cat:'spell',miss:true},
+  ]
+},
+
+{
+  id:'a10', name:'Leyndell, Royal Capital', subtitle:'Morgott — do thoroughly, point of partial no return later',
+  story:'<strong>CRITICAL AREA.</strong> Bolt of Gransax is on the giant spear in the capital and is GONE after Maliketh. Get it now. Dung Eater in Subterranean Shunning Grounds. Corhyn + Goldmask questline. All three Shabiri Grapes for Hyetta.',
+  miss:'⚠ Bolt of Gransax (Legendary) — permanently missable after Farum Azula. Dung Eater — get 5x Seedbed Curse from sewers before freeing him. Crucible Knight Set — present in Royal Capital only.',
+  items:[
+    {id:'ld01',text:'Bolt of Gransax (Legendary weapon)',note:'On giant spear, Leyndell — PERMANENTLY MISSABLE after Maliketh',cat:'weapon',miss:true},
+    {id:'ld02',text:'Erdtree\'s Favor +2 (Legendary talisman)',note:'Ashen Leyndell ONLY — only available POST-Maliketh. Flag now, get later.',cat:'talisman'},
+    {id:'ld03',text:'Eclipse Shotel',note:'Castle Sol, Mountaintops — note here, get later',cat:'weapon'},
+    {id:'ld04',text:'Regal Omen Bairn',note:'Enia — Morgott Remembrance',cat:'weapon'},
+    {id:'ld05',text:'Morgott\'s Cursed Sword',note:'Enia — Morgott Remembrance alt',cat:'weapon'},
+    {id:'ld06',text:'Crucible Knight Set',note:'Leyndell Royal Capital — MISSABLE after Maliketh (Ashen replaces)',cat:'armor',miss:true},
+    {id:'ld07',text:'Lionel\'s Set',note:'Leyndell side room near Avenue Balcony grace',cat:'armor'},
+    {id:'ld08',text:'Fingerprint Set',note:'Subterranean Shunning Grounds — sewers',cat:'armor'},
+    {id:'ld09',text:'Omenkiller Rollo (spirit)',note:'Auriza Side Tomb',cat:'spirit'},
+    {id:'ld10',text:'Oracle Envoy Ashes',note:'Leyndell area — oracle envoy drop',cat:'spirit'},
+    {id:'ld11',text:'Tibia Mariner Ashes',note:'Tibia Mariner boss drop, Leyndell outskirts',cat:'spirit'},
+    {id:'ld12',text:'Frenzied Flame access',note:'Under Subterranean Shunning Grounds — require Three Fingers door',cat:'key',miss:true},
+    {id:'ld13',text:'Taker\'s Cameo talisman',note:'Dung Eater quest — free him from sewers then questline',cat:'talisman',miss:true},
+    {id:'ld14',text:'Omen Set (Dung Eater)',note:'Give 5x Seedbed Curse to Dung Eater. DO NOT free him before collecting all 5.',cat:'armor',miss:true},
+    {id:'ld15',text:'Envoy\'s Longhorn',note:'Large Oracle Envoy drop, Leyndell',cat:'weapon'},
+    {id:'ld16',text:'Sentry\'s Torch',note:'Leyndell merchant',cat:'catalyst'},
+    {id:'ld17',text:'Law of Regression (incantation)',note:'Goldmask / Corhyn quest — needed to learn near Goldmask',cat:'spell',miss:true},
+    {id:'ld18',text:'Mending Rune of Perfect Order',note:'Corhyn gives — Goldmask quest completion',cat:'key',miss:true},
+    {id:'ld19',text:'All Shabiri Grapes x3 (for Hyetta)',note:'Church of Inhibition, Grace near Frenzied Flame entrance, one other — collect now',cat:'key',miss:true},
+    {id:'ld20',text:'Frenzied Flame Seal',note:'Hyetta quest completion (Frenzied Flame Proscription)',cat:'catalyst',miss:true},
+    {id:'ld21',text:'Frenzied Burst (incantation)',note:'Frenzied Flame Proscription area loot',cat:'spell'},
+    {id:'ld22',text:'Howl of Shabriri (incantation)',note:'Mohg the Omen, Subterranean Shunning Grounds',cat:'spell'},
+    {id:'ld23',text:'Blackguard encounter + loot',note:'Boggart at Leyndell moat — buy from him (Dung Eater may kill him)',cat:'armor',miss:true},
+    {id:'ld24',text:'Ash of War: Repeating Thrust',note:'Murkwater Catacombs — check if not done',cat:'ash'},
+    {id:'ld25',text:'Miquellan Knight\'s Sword',note:'Elphael — note here, get on Haligtree visit',cat:'weapon'},
+  ]
+},
+
+{
+  id:'a11', name:'Mountaintops of the Giants', subtitle:'Post-Morgott / Rold Lift',
+  story:'Large area with late-game content. Millicent\'s quest reaches its climax near Malenia — do this before Malenia. Fire Giant and burning the Erdtree are the point of no return for Leyndell → Ashen Capital.',
+  miss:'⚠ Millicent quest must be completed before Malenia for Unalloyed Gold Needle / Miquella\'s Needle. Get Eclipse Shotel from Castle Sol. Death\'s Poker from Death Rite Bird (night).',
+  items:[
+    {id:'mt01',text:'Eclipse Shotel',note:'Castle Sol, Mountaintops',cat:'weapon'},
+    {id:'mt02',text:'Commander\'s Standard',note:'Commander Niall boss, Castle Sol',cat:'weapon'},
+    {id:'mt03',text:'Death\'s Poker',note:'Death Rite Bird boss at night, Consecrated Snowfield',cat:'weapon'},
+    {id:'mt04',text:'Eleonora\'s Poleblade',note:'Bloody Finger Eleonora invasion, Second Church of Marika',cat:'weapon'},
+    {id:'mt05',text:'Envoy\'s Long Horn / Horn Bow',note:'Various oracle envoy drops',cat:'weapon'},
+    {id:'mt06',text:'White Reed Set',note:'Spiritcaller Cave, Mountaintops',cat:'armor'},
+    {id:'mt07',text:'Gravel Stone Seal',note:'Knight of Zamor drop',cat:'catalyst'},
+    {id:'mt08',text:'Giant\'s Seal',note:'Giant-Conquering Hero\'s Grave',cat:'catalyst'},
+    {id:'mt09',text:'Founding Rain of Stars (Legendary sorcery)',note:'Heretical Rise — across invisible bridge',cat:'spell'},
+    {id:'mt10',text:'Ranni\'s Dark Moon (Legendary sorcery)',note:'Chelona\'s Rise, Moonfolk Ruins plateau — Ranni quest step',cat:'spell',miss:true},
+    {id:'mt11',text:'Helphen\'s Scythe (sorcery)',note:'Death Rite Bird, Mountaintops',cat:'spell'},
+    {id:'mt12',text:'Ancient Death Rancor (sorcery)',note:'If not collected in Nokron / Liurnia',cat:'spell'},
+    {id:'mt13',text:'Burn O Flame! (incantation)',note:'Fire Monk drop',cat:'spell'},
+    {id:'mt14',text:'Black Blade (weapon)',note:'Enia — Maliketh Remembrance (alt)',cat:'weapon'},
+    {id:'mt15',text:'Maliketh\'s Black Blade (Legendary)',note:'Enia — Maliketh Remembrance',cat:'weapon'},
+    {id:'mt16',text:'Maliketh\'s Set',note:'Enia after Maliketh',cat:'armor'},
+    {id:'mt17',text:'Millicent\'s Prosthesis (talisman)',note:'Help Millicent, get from her summon sign',cat:'talisman',miss:true},
+    {id:'mt18',text:'Unalloyed Gold Needle',note:'Millicent quest — give to Malenia\'s flower after fight → Miquella\'s Needle',cat:'key',miss:true},
+    {id:'mt19',text:'Graven-Mass Talisman (Legendary)',note:'Albinauric Rise tower, Consecrated Snowfield',cat:'talisman'},
+    {id:'mt20',text:'Viridian Amber Medallion +2',note:'Cave of the Forlorn, Mountaintops/Snowfield',cat:'talisman'},
+    {id:'mt21',text:'Bell Bearing: Somber Miner 2',note:'Yelough Anix Tunnel boss, Consecrated Snowfield',cat:'stone'},
+    {id:'mt22',text:'Cleanrot Knight Set',note:'Cleanrot Knight drops — Elphael / Haligtree',cat:'armor'},
+    {id:'mt23',text:'Albinauric Staff',note:'Consecrated Snowfield Catacombs',cat:'catalyst'},
+    {id:'mt24',text:'Night\'s Cavalry Set',note:'Night\'s Cavalry drops — night',cat:'armor'},
+  ]
+},
+
+{
+  id:'a12', name:'Elphael & Miquella\'s Haligtree', subtitle:'Malenia',
+  story:'Late-game optional area with multiple Legendary items. Cleanrot Knight Finlay spirit ash is here. Rotten Crystal Staff. Dragoncrest Greatshield Talisman (Legendary).',
+  items:[
+    {id:'el01',text:'Hand of Malenia (Legendary weapon)',note:'Enia — Malenia Remembrance',cat:'weapon'},
+    {id:'el02',text:'Malenia\'s Armor Set',note:'Enia after Remembrance',cat:'armor'},
+    {id:'el03',text:'Cleanrot Knight Finlay (Legendary spirit)',note:'Elphael — behind a chest in catacombs shortcut area',cat:'spirit'},
+    {id:'el04',text:'Dragoncrest Greatshield Talisman (Legendary)',note:'Elphael chest — Hero\'s Grave area',cat:'talisman'},
+    {id:'el05',text:'Rotten Crystal Staff',note:'Elphael enemy drop or chest',cat:'catalyst'},
+    {id:'el06',text:'Miquellan Knight\'s Sword',note:'Elphael chest',cat:'weapon'},
+    {id:'el07',text:'Cleanrot Set',note:'Cleanrot Knight enemy drops',cat:'armor'},
+    {id:'el08',text:'Immunizing Horn Charm +1',note:'Elphael chest',cat:'talisman'},
+    {id:'el09',text:'Numen\'s Rune loot',note:'Various — loot carefully',cat:'key'},
+  ]
+},
+
+{
+  id:'a13', name:'Mohgwyn Palace', subtitle:'White Mask Varré quest OR teleporter',
+  story:'Mohg for the Remembrance. Get the War Surgeon Set here. Albinauric loot. Can access via Varré quest or Consecrated Snowfield teleporter.',
+  items:[
+    {id:'mh01',text:'Mohg\'s Sacred Spear',note:'Enia — Mohg Remembrance',cat:'weapon'},
+    {id:'mh02',text:'Bloodboon (incantation)',note:'Enia — Mohg Remembrance alt',cat:'spell'},
+    {id:'mh03',text:'War Surgeon Set',note:'White Mask Varré area / War Surgeon enemies',cat:'armor'},
+    {id:'mh04',text:'Albinauric Set',note:'Albinauric enemy drops',cat:'armor'},
+    {id:'mh05',text:'Sanguine Noble Set',note:'Sanguine Noble drop',cat:'armor'},
+    {id:'mh06',text:'Bloody Helice',note:'Writheblood Ruins, Altus Plateau — before Palace',cat:'weapon'},
+    {id:'mh07',text:'Lord of Blood\'s Exultation talisman',note:'Esgar Priest of Blood boss, Leyndell sewers',cat:'talisman'},
+  ]
+},
+
+{
+  id:'a14', name:'Crumbling Farum Azula', subtitle:'Maliketh — point of no return for Leyndell',
+  story:'<strong>POINT OF NO RETURN.</strong> After Maliketh, Leyndell becomes Ashen Capital — Bolt of Gransax, Crucible Knight Set, and several vendors become unavailable. Make sure all Leyndell items are done first.',
+  miss:'⚠ Kill Maliketh ONLY after completing all Leyndell items. Get Placidusax by crouching into the time-stop zone before the final grace. Devourer\'s Scepter from Bernahl invasion here if you missed it at VM.',
+  items:[
+    {id:'fa01',text:'Maliketh\'s Black Blade (Legendary)',note:'Enia after',cat:'weapon'},
+    {id:'fa02',text:'Dragon King\'s Cragblade',note:'Enia — Dragonlord Placidusax Remembrance',cat:'weapon'},
+    {id:'fa03',text:'Old Lord\'s Talisman (Legendary)',note:'Farum Azula chest',cat:'talisman'},
+    {id:'fa04',text:'Bell Bearing: Gravity Stone Miner',note:'Farum Azula — gravity soldier type boss',cat:'stone'},
+    {id:'fa05',text:'Devourer\'s Scepter',note:'Bernahl invasion — Volcano Manor contract alt, or here',cat:'weapon',miss:true},
+    {id:'fa06',text:'Ancient Dragon Smithing Stones',note:'Scattered in Farum Azula — collect all on the way',cat:'stone'},
+    {id:'fa07',text:'Beastman\'s Cleaver',note:'Beastman enemy drop',cat:'weapon'},
+    {id:'fa08',text:'Ancient Dragon Knight set',note:'Farum Azula knight drops',cat:'armor'},
+    {id:'fa09',text:'Ash of War: Taker\'s Flames',note:'Farum Azula area',cat:'ash'},
+    {id:'fa10',text:'Stormcaller (Ash of War)',note:'Farum Azula',cat:'ash'},
+    {id:'fa11',text:'Black Flame incantations',note:'Godskin Noble / Apostle drops in Farum',cat:'spell'},
+    {id:'fa12',text:'Godskin Peeler',note:'Godskin Apostle drop, Farum',cat:'weapon'},
+    {id:'fa13',text:'Godslayer\'s Greatsword',note:'Divine Tower of East Altus — Queen\'s Black Flame gate',cat:'weapon'},
+    {id:'fa14',text:'Godslayer\'s Seal',note:'Divine Tower of East Altus',cat:'catalyst'},
+    {id:'fa15',text:'Godslayer armor set',note:'Godskin Apostle / Noble drops',cat:'armor'},
+  ]
+},
+
+{
+  id:'a15', name:'Ashen Leyndell', subtitle:'Post-Maliketh — Godfrey → Elden Beast',
+  story:'Erdtree\'s Favor +2 is only available now. Buy any remaining stock from Twin Maiden Husks (Enia dies after Elden Beast). Envoy\'s Longhorn drops here.',
+  miss:'⚠ Enia dies after Elden Beast — buy all remaining Remembrance weapons before final boss. Erdtree\'s Favor +2 only exists here.',
+  items:[
+    {id:'al01',text:'Erdtree\'s Favor +2 (Legendary talisman)',note:'Ashen Leyndell ONLY — on a hanging branch near Elden Throne',cat:'talisman'},
+    {id:'al02',text:'Axe of Godfrey',note:'Enia — Godfrey Remembrance',cat:'weapon'},
+    {id:'al03',text:'Godfrey Icon talisman',note:'Enia — Godfrey Remembrance alt',cat:'talisman'},
+    {id:'al04',text:'Godfrey\'s Set',note:'Enia after Godfrey',cat:'armor'},
+    {id:'al05',text:'Marika\'s Hammer',note:'Enia — Elden Remembrance (dupe for Sacred Relic Sword)',cat:'weapon'},
+    {id:'al06',text:'Sacred Relic Sword',note:'Enia — Elden Remembrance alt (use mausoleum dupe)',cat:'weapon'},
+    {id:'al07',text:'Elden Beast set / Radagon set',note:'Post-game Enia',cat:'armor'},
+    {id:'al08',text:'Envoy\'s Longhorn',note:'Large Oracle Envoy, Ashen Leyndell',cat:'weapon'},
+    {id:'al09',text:'All outstanding Remembrance weapons',note:'Buy before killing Elden Beast — Enia gone after',cat:'weapon',miss:true},
+  ]
+},
+
+];
+
+// ══════════════════════════════════════════════════
+// RENDER ENGINE
+// ══════════════════════════════════════════════════
+
+const CAT_LABELS = {
+  weapon:'Weapons', armor:'Armor & Sets', spell:'Spells & Incantations',
+  catalyst:'Catalysts / Staves / Seals', talisman:'Talismans', ash:'Ashes of War',
+  spirit:'Spirit Ashes', stone:'Smithing Stones & Bell Bearings', key:'Key Items / Quest', npc:'NPC / Quest Notes'
+};
+
+const CAT_ORDER = ['weapon','armor','spell','catalyst','talisman','ash','spirit','stone','key','npc'];
+
+function groupItems(items) {
+  const groups = {};
+  items.forEach(item => {
+    if (!groups[item.cat]) groups[item.cat] = [];
+    groups[item.cat].push(item);
+  });
+  return groups;
+}
+
+function makeItem(item) {
+  const done = !!state[item.id];
+  const div = document.createElement('div');
+  div.className = 'check-item' + (done?' done':'') + (item.miss?' miss':'') + (item.warn?' warn':'');
+  div.id = 'ci-'+item.id;
+  div.onclick = () => {
+    state[item.id] = !state[item.id];
+    div.classList.toggle('done', state[item.id]);
+    localStorage.setItem(SK, JSON.stringify(state));
+    updateStats();
+    updateAreaProgress(item.id);
+  };
+
+  const cb = document.createElement('div'); cb.className = 'cb';
+  const body = document.createElement('div'); body.className = 'item-body';
+  const text = document.createElement('div'); text.className = 'item-text'; text.textContent = item.text;
+  body.appendChild(text);
+  if (item.note) {
+    const note = document.createElement('div'); note.className = 'item-note'; note.textContent = item.note;
+    body.appendChild(note);
+  }
+
+  div.appendChild(cb);
+  div.appendChild(body);
+
+  if (item.miss) {
+    const tag = document.createElement('div'); tag.className = 'miss-tag'; tag.textContent = '⚠ MISS';
+    div.appendChild(tag);
+  } else if (item.warn) {
+    const tag = document.createElement('div'); tag.className = 'warn-tag'; tag.textContent = '⚡ WARN';
+    div.appendChild(tag);
+  }
+
+  return div;
+}
+
+function makeArea(area, idx) {
+  const total = area.items.length;
+  const done = area.items.filter(i => state[i.id]).length;
+  const pct = total ? Math.round(done/total*100) : 0;
+
+  const block = document.createElement('div');
+  block.className = 'area-block';
+  block.id = 'area-'+area.id;
+
+  // Header
+  const hdr = document.createElement('div');
+  hdr.className = 'area-header';
+  hdr.innerHTML = `
+    <div class="area-num">${String(idx+1).padStart(2,'0')}</div>
+    <div>
+      <div class="area-title">${area.name}</div>
+      <div class="area-subtitle">${area.subtitle}</div>
+    </div>
+    <div class="area-progress">
+      <span class="area-prog-text" id="prog-text-${area.id}">${done}/${total}</span>
+      <div class="area-prog-bar"><div class="area-prog-fill" id="prog-fill-${area.id}" style="width:${pct}%"></div></div>
+    </div>
+    <span class="expand-icon">▾</span>
+  `;
+
+  const body = document.createElement('div');
+  body.className = 'area-body';
+
+  if (area.story) {
+    const sn = document.createElement('div'); sn.className = 'story-note';
+    sn.innerHTML = area.story;
+    body.appendChild(sn);
+  }
+  if (area.miss) {
+    const mn = document.createElement('div'); mn.className = 'miss-note';
+    mn.innerHTML = '<strong>⚠ Missables:</strong> ' + area.miss;
+    body.appendChild(mn);
+  }
+  if (area.warn) {
+    const wn = document.createElement('div'); wn.className = 'warn-note';
+    wn.innerHTML = '<strong>⚡ Before moving on:</strong> ' + area.warn;
+    body.appendChild(wn);
+  }
+
+  // Legend
+  const leg = document.createElement('div'); leg.className = 'legend';
+  leg.innerHTML = '<div class="leg"><div class="leg-bar" style="background:var(--miss)"></div>Missable</div>';
+  body.appendChild(leg);
+
+  // Group items by category
+  const groups = groupItems(area.items);
+  CAT_ORDER.forEach(cat => {
+    if (!groups[cat]) return;
+    const sec = document.createElement('div'); sec.className = 'cat-section';
+    const lbl = document.createElement('div'); lbl.className = 'cat-label';
+    const missCount = groups[cat].filter(i=>i.miss).length;
+    lbl.innerHTML = `${CAT_LABELS[cat] || cat} <span class="cat-label-count">${groups[cat].length}${missCount?` · <span style="color:var(--miss)">${missCount} missable</span>`:''}`;
+    sec.appendChild(lbl);
+    groups[cat].forEach(item => sec.appendChild(makeItem(item)));
+    body.appendChild(sec);
+  });
+
+  hdr.onclick = () => {
+    const open = body.classList.toggle('open');
+    hdr.classList.toggle('open', open);
+  };
+
+  block.appendChild(hdr);
+  block.appendChild(body);
+  return block;
+}
+
+function buildSidebar() {
+  const nav = document.getElementById('sidenav');
+  nav.innerHTML = '<div class="sn-label">Areas</div>';
+  AREAS.forEach((area, idx) => {
+    const item = document.createElement('div');
+    item.className = 'sn-item';
+    item.id = 'sn-'+area.id;
+    const done = area.items.filter(i=>state[i.id]).length;
+    const total = area.items.length;
+    item.innerHTML = `<span>${String(idx+1).padStart(2,'0')}. ${area.name.split('—')[0].split('&')[0].trim()}</span><span class="sn-badge" id="snb-${area.id}">${done}/${total}</span>`;
+    item.onclick = () => {
+      document.getElementById('area-'+area.id).scrollIntoView({behavior:'smooth'});
+    };
+    nav.appendChild(item);
+  });
+}
+
+function updateStats() {
+  let done=0, total=0;
+  AREAS.forEach(a => {
+    total += a.items.length;
+    done += a.items.filter(i=>state[i.id]).length;
+  });
+  document.getElementById('hd').textContent = done;
+  document.getElementById('ht').textContent = total;
+  document.getElementById('hp').textContent = Math.round(done/total*100)+'%';
+}
+
+function updateAreaProgress(itemId) {
+  AREAS.forEach(area => {
+    if (!area.items.find(i=>i.id===itemId)) return;
+    const done = area.items.filter(i=>state[i.id]).length;
+    const total = area.items.length;
+    const pct = Math.round(done/total*100);
+    const pt = document.getElementById('prog-text-'+area.id);
+    const pf = document.getElementById('prog-fill-'+area.id);
+    const sb = document.getElementById('snb-'+area.id);
+    if(pt) pt.textContent = done+'/'+total;
+    if(pf) pf.style.width = pct+'%';
+    if(sb) sb.textContent = done+'/'+total;
+  });
+}
+
+function expandAll() { document.querySelectorAll('.area-body').forEach(b=>{ b.classList.add('open'); b.previousElementSibling.classList.add('open'); }); }
+function collapseAll() { document.querySelectorAll('.area-body').forEach(b=>{ b.classList.remove('open'); b.previousElementSibling.classList.remove('open'); }); }
+
+// INIT
+const main = document.getElementById('main');
+AREAS.forEach((area, idx) => main.appendChild(makeArea(area, idx)));
+buildSidebar();
+updateStats();
+</script>
+</body>
+</html>
